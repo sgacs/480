@@ -1,11 +1,91 @@
-\documentclass{article}
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
 \usepackage{graphicx}
+\usepackage{xcolor}
+
+\renewcommand\familydefault{\sfdefault}
+\usepackage{tgheros}
+
+\usepackage{amsmath,amssymb,amsthm,textcomp}
+\usepackage{enumerate}
+\usepackage{multicol}
+\usepackage{tikz}
+
+\usepackage{geometry}
+\geometry{left=25mm,right=25mm,%
+bindingoffset=0mm, top=20mm,bottom=20mm}
+
+
+\linespread{1.3}
+
+\newcommand{\linia}{\rule{\linewidth}{0.5pt}}
+
+% custom theorems if needed
+\newtheoremstyle{mytheor}
+    {1ex}{1ex}{\normalfont}{0pt}{\scshape}{.}{1ex}
+    {{\thmname{#1 }}{\thmnumber{#2}}{\thmnote{ (#3)}}}
+
+\theoremstyle{mytheor}
+\newtheorem{defi}{Definition}
+
+% my own titles
+\makeatletter
+\renewcommand{\maketitle}{
+\begin{center}
+\vspace{2ex}
+{\huge \textsc{\@title}}
+\vspace{1ex}
+\\
+\linia\\
+\@author \hfill \@date
+\vspace{4ex}
+\end{center}
+}
+\makeatother
+%%%
+
+% custom footers and headers
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{}
+\chead{}
+\rhead{}
+\lfoot{Final Project \textnumero{} 480}
+\cfoot{}
+\rfoot{Page \thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+%
+
+% code listing settings
 \usepackage{listings}
-\usepackage{caption}
-\usepackage{float}
-\usepackage{amsmath}
-\usepackage{amsfonts}
-\usepackage{amssymb}
+
+\lstset{
+    language=SQL,
+    basicstyle=\ttfamily\small,
+    aboveskip={1.0\baselineskip},
+    belowskip={1.0\baselineskip},
+    columns=fixed,
+    extendedchars=true,
+    breaklines=true,
+    tabsize=2,
+    prebreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+    frame=lines,
+    showtabs=false,
+    showspaces=false,
+    showstringspaces=false,
+    keywordstyle=\color[rgb]{0.627,0.126,0.941},
+    commentstyle=\color[rgb]{0.133,0.545,0.133},
+    stringstyle=\color[rgb]{01,0,0},
+    numbers=left,
+    numberstyle=\footnotesize,
+    stepnumber=1,
+    numbersep=10pt,
+    captionpos=t,
+    escapeinside={\%*}{*)}
+}
 
 \title{Hospital Database Project Report}
 \author{Muhammed Abdel Hamid Shelleh}
@@ -101,282 +181,87 @@
 
 \section{Views and Descriptions}
 \subsection{View: Patient Billing}
-\begin{lstlisting}[language=SQL]
-CREATE VIEW PatientBilling AS
-SELECT 
-    p.name AS patient_name,
-    inv.invoice_id,
-    inv.issue_date,
-    inv.start_date,
-    inv.end_date,
-    pay.amount AS payable_amount,
-    pay.description AS payable_description,
-    pay.date AS payable_date,
-    (SELECT SUM(amount) FROM Payment WHERE patient_id = p.patient_id) AS total_payments
-FROM 
-    Patient p
-JOIN Invoice inv ON p.patient_id = inv.patient_id
-JOIN Payable pay ON inv.invoice_id = pay.invoice_id;
-\end{lstlisting}
+\lstinputlisting{view-patient-billing.sql}
 \textbf{Description}: This view provides a comprehensive billing summary for each patient, including invoice details and total payments made.
 
 \subsection{View: Physician Performance}
-\begin{lstlisting}[language=SQL]
-CREATE VIEW PhysicianPerformance AS
-SELECT 
-    ph.name AS physician_name,
-    COUNT(ppm.patient_id) AS total_patients,
-    SUM(po.fee) AS total_revenue
-FROM 
-    Physician ph
-JOIN PhysicianPatientMonitoring ppm ON ph.physician_id = ppm.physician_id
-JOIN PhysicianOrder po ON ph.physician_id = po.physician_id
-GROUP BY ph.name;
-\end{lstlisting}
+\lstinputlisting{view-physician-performance.sql}
 \textbf{Description}: This view evaluates physician performance by counting the number of patients monitored and calculating the total revenue generated.
 
 \subsection{View: Room Occupancy Rate}
-\begin{lstlisting}[language=SQL]
-CREATE VIEW RoomOccupancyRate AS
-SELECT 
-    r.room_number,
-    COUNT(pr.assignment_id) AS total_occupancy,
-    r.capacity,
-    (COUNT(pr.assignment_id) / r.capacity) * 100 AS occupancy_rate
-FROM 
-    Room r
-JOIN PatientRoom pr ON r.room_number = pr.room_number
-GROUP BY r.room_number;
-\end{lstlisting}
+\lstinputlisting{view-room-occupancy-rate.sql}
 \textbf{Description}: This view calculates the occupancy rate for each room, helping to monitor room utilization.
 
 \section{Triggers and Descriptions}
 \subsection{Trigger: After Payable Insert}
-\begin{lstlisting}[language=SQL]
-CREATE TRIGGER after_payable_insert
-AFTER INSERT ON Payable
-FOR EACH ROW
-BEGIN
-    UPDATE Patient
-    SET balance = balance + NEW.amount
-    WHERE patient_id = (SELECT patient_id FROM Invoice WHERE invoice_id = NEW.invoice_id);
-END;
-\end{lstlisting}
+\lstinputlisting{trig-after-payable.sql}
 \textbf{Description}: This trigger updates the patient balance after a new payable is added, ensuring the balance reflects the latest charges.
 
 \subsection{Trigger: After Payment Insert}
-\begin{lstlisting}[language=SQL]
-CREATE TRIGGER after_payment_insert
-AFTER INSERT ON Payment
-FOR EACH ROW
-BEGIN
-    UPDATE Patient
-    SET balance = balance - NEW.amount
-    WHERE patient_id = NEW.patient_id;
-END;
-\end{lstlisting}
+\lstinputlisting{trig-after-payment.sql}
 \textbf{Description}: This trigger updates the patient balance after a payment is made, ensuring the balance reflects the latest payments.
 
 \subsection{Trigger: Prevent Room Overbooking}
-\begin{lstlisting}[language=SQL]
-CREATE TRIGGER stop_overbooking
-BEFORE INSERT ON PatientRoom
-FOR EACH ROW
-BEGIN
-    DECLARE room_capacity INT;
-    DECLARE current_occupancy INT;
-    SET room_capacity = (SELECT capacity FROM Room WHERE room_number = NEW.room_number);
-    SET current_occupancy = (SELECT COUNT(*) FROM PatientRoom WHERE room_number = NEW.room_number AND check_out_date IS NULL);
-    IF current_occupancy >= room_capacity THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Room overbooking is not allowed';
-    END IF;
-END;
-\end{lstlisting}
+\lstinputlisting{trig-stop-overbooking.sql}
 \textbf{Description}: This trigger prevents overbooking of rooms by checking the current occupancy before a new assignment.
 
 \section{Queries, Descriptions, and Results}
 \subsection{Query 1: Patient's Medication History}
-\begin{lstlisting}[language=SQL]
-SELECT 
-    p.name AS patient_name,
-    m.name AS medication_name,
-    ma.administration_date,
-    n.name AS nurse_name
-FROM 
-    MedicationAdministration ma
-JOIN Patient p ON ma.patient_id = p.patient_id
-JOIN Medication m ON ma.medication_id = m.medication_id
-JOIN Nurse n ON ma.nurse_id = n.nurse_id
-ORDER BY ma.administration_date;
-\end{lstlisting}
+\lstinputlisting{qr-pt-med-hist.sql}
 \textbf{Description}: Retrieves the medication history for each patient, including the patient's name, medication name, administration date, and the nurse who administered the medication.
 
 \subsection{Query 2: Total Medications Administered by Each Nurse}
-\begin{lstlisting}[language=SQL]
-SELECT 
-    n.name AS nurse_name,
-    COUNT(ma.administration_id) AS total_medications_administered
-FROM 
-    MedicationAdministration ma
-JOIN Nurse n ON ma.nurse_id = n.nurse_id
-GROUP BY n.name
-ORDER BY total_medications_administered DESC;
-\end{lstlisting}
+\lstinputlisting{qr-nurse-meds.sql}
 \textbf{Description}: Counts the total number of medications administered by each nurse and orders the results from highest to lowest.
 
 \subsection{Query 3: Patients with Above Average Payments}
-\begin{lstlisting}[language=SQL]
-SELECT 
-    p.name,
-    SUM(pay.amount) AS total_payments
-FROM 
-    Patient p
-JOIN Payment pay ON p.patient_id = pay.patient_id
-GROUP BY p.name
-HAVING total_payments > (SELECT AVG(total_payments) FROM (SELECT SUM(amount) AS total_payments FROM Payment GROUP BY patient_id) AS subquery)
-ORDER BY total_payments DESC;
-\end{lstlisting}
+\lstinputlisting{qr-pt-ab-avg-payment.sql}
 \textbf{Description}: Identifies patients whose total payments are above the average payment amount.
 
 \subsection{Query 4: Physicians with Most Patients}
-\begin{lstlisting}[language=SQL]
-SELECT 
-    ph.name AS physician_name,
-    COUNT(ppm.patient_id) AS total_patients
-FROM 
-    PhysicianPatientMonitoring ppm
-JOIN Physician ph ON ppm.physician_id = ph.physician_id
-GROUP BY ph.name
-ORDER BY total_patients DESC;
-\end{lstlisting}
+\lstinputlisting{qr-phys-most-pts.sql}
 \textbf{Description}: Finds the physicians who monitor the most patients, sorted by the number of patients in descending order.
 
 \subsection{Query 5: Total Revenue by Medication}
-\begin{lstlisting}[language=SQL]
-SELECT 
-    m.name AS medication_name,
-    SUM(m.price) AS total_revenue
-FROM 
-    MedicationAdministration ma
-JOIN Medication m ON ma.medication_id = m.medication_id
-GROUP BY m.name
-ORDER BY total_revenue DESC;
-\end{lstlisting}
+\lstinputlisting{qr-med-rev.sql}
 \textbf{Description}: Calculates the total revenue generated by each medication and orders the results by total revenue in descending order.
 
 \subsection{Query 6: Rooms with Above Average Occupancy Rate}
-\begin{lstlisting}[language=SQL]
-SELECT 
-    r.room_number,
-    COUNT(pr.assignment_id) AS total_occupancy
-FROM 
-    PatientRoom pr
-JOIN Room r ON pr.room_number = r.room_number
-GROUP BY r.room_number
-HAVING total_occupancy > (SELECT AVG(total_occupancy) FROM (SELECT COUNT(assignment_id) AS total_occupancy FROM PatientRoom GROUP BY room_number) AS subquery)
-ORDER BY total_occupancy DESC;
-\end{lstlisting}
+\lstinputlisting{qr-rm-ab-avg-nights.sql}
 \textbf{Description}: Identifies rooms that have an occupancy rate above the average occupancy rate.
 
 \subsection{Query 7: Patients and Their Total Expenses}
-\begin{lstlisting}[language=SQL]
-SELECT 
-    p.name AS patient_name,
-    SUM(pay.amount) AS total_expenses
-FROM 
-    Payable pay
-JOIN Patient p ON pay.patient_id = p.patient_id
-GROUP BY p.name
-ORDER BY total_expenses DESC;
-\end{lstlisting}
+\lstinputlisting{qr-pt-ttl-expenses.sql}
 \textbf{Description}: Retrieves each patient and their total expenses incurred, sorted by the highest total expenses.
 
 \subsection{Query 8: Average Length of Stay per Room}
-\begin{lstlisting}[language=SQL]
-SELECT 
-    r.room_number,
-    AVG(DATEDIFF(pr.check_out_date, pr.check_in_date)) AS avg_length_of_stay
-FROM 
-    PatientRoom pr
-JOIN Room r ON pr.room_number = r.room_number
-GROUP BY r.room_number
-ORDER BY avg_length_of_stay DESC;
-\end{lstlisting}
+\lstinputlisting{qr-avg-rm-nights.sql}
 \textbf{Description}: Calculates the average length of stay for each room and orders the results from longest to shortest average stay.
 
-\subsection{Query 9: Physicians Treating Most Severe Cases}
-\begin{lstlisting}[language=SQL]
-SELECT 
-    ph.name AS physician_name,
-    COUNT(hr.record_id) AS severe_cases
-FROM 
-    HealthRecord hr
-JOIN PhysicianPatientMonitoring ppm ON hr.patient_id = ppm.patient_id
-JOIN Physician ph ON ppm.physician_id = ph.physician_id
-WHERE hr.status = 'ongoing'
-GROUP BY ph.name
-ORDER BY severe_cases DESC;
-\end{lstlisting}
-\textbf{Description}: Identifies physicians who are treating the most severe cases (ongoing health records).
+\subsection{Query 9: Physicians Treating Most Chronic Cases}
+\lstinputlisting{qr-phys-chronic.sql}
+\textbf{Description}: Identifies physicians who are treating the most chronic cases (ongoing health records).
 
 \subsection{Query 10: Total Revenue by Physician}
-\begin{lstlisting}[language=SQL]
-SELECT 
-    ph.name AS physician_name,
-    SUM(i.fee) AS total_revenue
-FROM 
-    PhysicianOrder po
-JOIN Physician ph ON po.physician_id = ph.physician_id
-JOIN Instruction i ON po.instruction_id = i.instruction_id
-GROUP BY ph.name
-ORDER BY total_revenue DESC;
-\end{lstlisting}
+\lstinputlisting{qr-phys-rev.sql}
 \textbf{Description}: Calculates the total revenue generated by each physician based on the fees of the instructions they have given.
 
 \subsection{Query 11: Total Number of Treatments per Department}
-\begin{lstlisting}[language=SQL]
-SELECT 
-    ph.field_of_expertise AS department,
-    COUNT(po.order_id) AS total_treatments
-FROM 
-    PhysicianOrder po
-JOIN Physician ph ON po.physician_id = ph.physician_id
-GROUP BY ph.field_of_expertise
-ORDER BY total_treatments DESC;
-\end{lstlisting}
+\lstinputlisting{qr-num-trtmnt-dept.sql}
 \textbf{Description}: Finds the total number of treatments ordered per department, sorted by the highest number of treatments.
 
 \subsection{Query 12: Patients with Highest Number of Medications}
-\begin{lstlisting}[language=SQL]
-SELECT 
-    p.name,
-    COUNT(ma.administration_id) AS num_medications
-FROM 
-    MedicationAdministration ma
-JOIN Patient p ON ma.patient_id = p.patient_id
-GROUP BY p.name
-ORDER BY num_medications DESC
-LIMIT 5;
-\end{lstlisting}
+\lstinputlisting{qr-pt-high-med.sql}
 \textbf{Description}: Retrieves the top 5 patients who have received the highest number of medications.
 
 \section{Transactions and Descriptions}
 \subsection{Transaction: Patient Admission}
-\begin{lstlisting}[language=SQL]
-START TRANSACTION;
-INSERT INTO Patient (patient_id, name, address, phone, balance) VALUES (6, 'John Doe', '123 Elm St', '555-1234', 0);
-INSERT INTO HealthRecord (record_id, patient_id, disease, diagnosis_date, status, description) VALUES (1, 6, 'Flu', '2024-07-26', 'ongoing', 'Patient shows flu symptoms');
-COMMIT;
-\end{lstlisting}
+\lstinputlisting{trans-pt-admit.sql}
 \textbf{Description}: This transaction inserts a new patient and their initial health record, ensuring atomicity and consistency.
 
 \subsection{Transaction: Patient Discharge}
-\begin{lstlisting}[language=SQL]
-START TRANSACTION;
-UPDATE PatientRoom SET check_out_date = '2024-07-26' WHERE assignment_id = 1;
-INSERT INTO Invoice (invoice_id, patient_id, account_number, issue_date, start_date, end_date) VALUES (1, 1, 'ACC001', '2024-07-26', '2024-07-01', '2024-07-26');
-COMMIT;
-\end{lstlisting}
+\lstinputlisting{trans-pt-discharge.sql}
 \textbf{Description}: This transaction updates the check-out date for a patient and issues an invoice for the hospitalization period.
 
 \end{document}
+% \lstinputlisting{}
