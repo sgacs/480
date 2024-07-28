@@ -7,7 +7,7 @@
 
 \renewcommand\familydefault{\sfdefault}
 \usepackage{tgheros}
-
+\usepackage{caption}
 \usepackage{amsmath,amssymb,amsthm,textcomp}
 \usepackage{enumerate}
 \usepackage{multicol}
@@ -89,7 +89,7 @@ bindingoffset=0mm, top=20mm,bottom=20mm}
 
 \title{Hospital Database Project Report}
 \author{Muhammed Abdel Hamid Shelleh}
-\date{\today}
+\date{July 27, 2024}
 
 \begin{document}
 
@@ -262,6 +262,9 @@ bindingoffset=0mm, top=20mm,bottom=20mm}
 \lstinputlisting{qr-pt-treatment-summary.sql}
 \textbf{Description}: Provides a summary of the different treatments and medications a patient had been given.
 
+\subsection{Query 15: Patients with Above Average Stays}
+\lstinputlisting{qr-pt-ab-avg-stay.sql}
+\textbf{Description}: Retrieves the patients who have higher than the average nights stayed at the hospital in descending order.
 
 \section{Transactions and Descriptions}
 \subsection{Transaction: Patient Admission}
@@ -271,6 +274,84 @@ bindingoffset=0mm, top=20mm,bottom=20mm}
 \subsection{Transaction: Patient Discharge}
 \lstinputlisting{trans-pt-discharge.sql}
 \textbf{Description}: This transaction updates the check-out date for a patient and issues an invoice for the hospitalization period.
+
+\appendix
+\section{Appendix}
+
+\subsection{SQL File: hospital-schema}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-pdth.png}
+
+\subsection{SQL File: hospital-data}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-peev.png}
+
+\subsection{SQL View: view-room-occupancy-rate}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-pgnv.png}
+
+\subsection{SQL View: view-patient-billing}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-pgiw.png}
+
+\subsection{SQL View: view-physician-performance}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-pglj.png}
+
+\subsection{SQL Trigger: trig-after-payable}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-pgrc.png}
+
+\subsection{SQL Trigger: trig-stop-overbooking}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-pgpr.png}
+
+\subsection{SQL Trigger: trig-after-payment}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-pgsq.png}
+
+\subsection{SQL Transaction: trans-pt-admit}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-phdv.png}
+
+\subsection{SQL Transaction: trans-pt-discharge}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-phfr.png}
+
+\subsection{SQL Query: qr-avg-rm-nights}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-pelj.png}
+
+\subsection{SQL Query: qr-pt-ab-avg-payment}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-peua.png}
+
+\subsection{SQL Query: qr-dept-rev}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-phar.png}
+
+\subsection{SQL Query: qr-pt-ttl-expenses}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-pemq.png}
+
+\subsection{SQL Query: qr-nurse-meds}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-peuz.png}
+
+\subsection{SQL Query: qr-pt-ab-avg-stay}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-phcc.png}
+
+\subsection{SQL Query: qr-num-trtmnt-dept}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-pegx.png}
+
+\subsection{SQL Query: qr-rm-ab-avg-nights}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-peor.png}
+
+\subsection{SQL Query: qr-pt-med-hist}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-pexw.png}
+
+\subsection{SQL Query: qr-phys-rev}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-peig.png}
+
+\subsection{SQL Query: qr-med-rev}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-pera.png}
+
+\subsection{SQL Query: qr-phys-chronic}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-pejp.png}
+
+\subsection{SQL Query: qr-phys-most-pts}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-pesr.png}
+
+\subsection{SQL Query: qr-pt-treatment-summary}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-pgzh.png}
+
+\subsection{SQL Query: qr-pt-high-med}
+\includegraphics[width=\textwidth]{Screenshots/SCR-20240727-phhm.png}
 
 \end{document}
 % \lstinputlisting{}
